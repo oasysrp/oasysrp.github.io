@@ -23,7 +23,7 @@ window.OASYS = {
     discord: "https://discord.gg/oasysrp",
     tiktok: "https://www.tiktok.com/@TON-COMPTE",        // ← remplace TON-COMPTE
     fivem: "https://cfx.re/join/kqm8jma",                // ← ton lien cfx.re/join/XXXXX
-    tebex: "https://TA-BOUTIQUE.tebex.io",               // ← ton lien Tebex
+    tebex: "https://oasys-rp.tebex.store",               // ← ton lien Tebex
 
     // Bouton « Postuler » des entreprises disponibles (salon / ticket Discord)
     candidatureEntreprise: "https://discord.gg/oasysrp",
