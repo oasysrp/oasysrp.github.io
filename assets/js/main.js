@@ -321,6 +321,117 @@
         '<span class="coin__price">' + esc(c.prix) + "</span>" +
         '<span class="btn btn--sm btn--sky">Acheter' + I.arrow + "</span></span></a>";
     }).join("");
+    $$(".coin", coinBox).forEach(function (a, i) {
+      var pkg = C.coins[i].paquet;
+      if (pkg) a.setAttribute("data-paquet", String(pkg));
+    });
+  }
+
+  /* ---------------------------------------------------------------- Paiement direct Tebex
+     Acheter -> panier Tebex -> connexion FiveM (obligatoire chez Tebex) -> retour ici
+     -> fenêtre de paiement Tebex par-dessus le site (sinon page pay.tebex.io). */
+  var ckToken = C.tebex && C.tebex.checkoutToken;
+  if (coinBox && ckToken && window.fetch) {
+    var API = "https://headless.tebex.io/api/";
+    var KEY = "oasys_tebex_achat";
+    var here = location.origin + location.pathname;
+
+    var toast = document.createElement("div");
+    toast.className = "pay-toast";
+    toast.setAttribute("role", "status");
+    toast.hidden = true;
+    document.body.appendChild(toast);
+    var msg = function (t, err) {
+      toast.textContent = t;
+      toast.classList.toggle("is-err", !!err);
+      toast.hidden = !t;
+    };
+    var api = function (path, method, body) {
+      return fetch(API + path, {
+        method: method || "GET",
+        headers: body ? { "Content-Type": "application/json" } : {},
+        body: body ? JSON.stringify(body) : undefined,
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) throw new Error(j.detail || j.title || ("Erreur " + r.status));
+          return j;
+        });
+      });
+    };
+    var fail = function (e) {
+      sessionStorage.removeItem(KEY);
+      msg("Paiement impossible : " + (e && e.message ? e.message : "réessaie dans un instant") + ".", true);
+      setTimeout(function () { msg(""); }, 7000);
+    };
+
+    var loadTebexJs = function () {
+      if (window.Tebex) return Promise.resolve(window.Tebex);
+      return new Promise(function (ok, ko) {
+        var s = document.createElement("script");
+        s.src = "https://js.tebex.io/v/1.js";
+        s.onload = function () { window.Tebex ? ok(window.Tebex) : ko(); };
+        s.onerror = ko;
+        document.head.appendChild(s);
+      });
+    };
+    var payer = function (basket) {
+      var link = basket.links && basket.links.checkout;
+      loadTebexJs().then(function (Tebex) {
+        Tebex.checkout.init({
+          ident: basket.ident,
+          theme: "dark",
+          colors: [{ name: "primary", color: "#3fd0fb" }, { name: "secondary", color: "#0b1622" }],
+        });
+        Tebex.checkout.on("payment:complete", function () {
+          msg("Paiement validé ! Tes coins arrivent en jeu (/boutique).");
+          setTimeout(function () { msg(""); }, 9000);
+        });
+        Tebex.checkout.launch();
+        msg("");
+      }).catch(function () {
+        if (link) location.href = link; else fail();
+      });
+    };
+
+    // Clic sur Acheter : nouveau panier puis connexion FiveM
+    coinBox.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest(".coin[data-paquet]");
+      if (!a) return;
+      e.preventDefault();
+      msg("Préparation du paiement…");
+      api("accounts/" + encodeURIComponent(ckToken) + "/baskets", "POST", {
+        complete_url: here + "?paiement=ok",
+        cancel_url: here,
+        complete_auto_redirect: true,
+      }).then(function (j) {
+        var ident = j.data.ident;
+        sessionStorage.setItem(KEY, JSON.stringify({ ident: ident, paquet: Number(a.getAttribute("data-paquet")) }));
+        return api("accounts/" + encodeURIComponent(ckToken) + "/baskets/" + encodeURIComponent(ident) +
+          "/auth?returnUrl=" + encodeURIComponent(here + "?achat=1"));
+      }).then(function (links) {
+        var l = (links || [])[0];
+        if (!l || !l.url) throw new Error("connexion FiveM indisponible");
+        msg("Connexion FiveM…");
+        location.href = l.url;
+      }).catch(fail);
+    });
+
+    // Retour de la connexion FiveM : ajoute le pack puis ouvre le paiement
+    var params = new URLSearchParams(location.search);
+    var saved = null;
+    try { saved = JSON.parse(sessionStorage.getItem(KEY) || "null"); } catch (err) { saved = null; }
+    if (params.has("achat") && saved && saved.ident && saved.paquet) {
+      history.replaceState(null, "", here + location.hash);
+      msg("Ajout du pack…");
+      api("baskets/" + encodeURIComponent(saved.ident) + "/packages", "POST", { package_id: saved.paquet, quantity: 1 })
+        .then(function () { return api("accounts/" + encodeURIComponent(ckToken) + "/baskets/" + encodeURIComponent(saved.ident)); })
+        .then(function (j) { sessionStorage.removeItem(KEY); payer(j.data); })
+        .catch(fail);
+    } else if (params.get("paiement") === "ok") {
+      history.replaceState(null, "", here + location.hash);
+      msg("Paiement validé ! Tes coins arrivent en jeu (/boutique).");
+      setTimeout(function () { msg(""); }, 9000);
+    }
   }
 
   /* ---------------------------------------------------------------- Tebex (optionnel) */

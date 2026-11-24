@@ -691,3 +691,7 @@ main { overflow-x: clip; }
 .coin__gift { font-weight: 600; color: var(--sky); margin-left: 6px; }
 .coin__gift { display: block; margin: 8px 0 0; }
 .coin__gift::before { content: "+ "; }
+
+/* Paiement direct Tebex : message d'état */
+.pay-toast { position: fixed; left: 50%; bottom: 26px; z-index: 60; transform: translateX(-50%); max-width: min(92vw, 520px); padding: 14px 20px; border: 1px solid var(--line-2); border-left: 3px solid var(--sky); background: rgba(7,15,28,.92); backdrop-filter: blur(10px); color: var(--white); font: 500 14px/1.4 var(--font-body); }
+.pay-toast.is-err { border-left-color: var(--red); }

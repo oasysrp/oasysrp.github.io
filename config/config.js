@@ -39,16 +39,20 @@ window.OASYS = {
      Laisse vide "" pour simplement afficher le bouton vers la boutique. */
   tebex: {
     publicToken: "",
+    // Paiement direct des packs de coins (bouton Acheter -> connexion FiveM -> paiement Tebex).
+    // Jeton PUBLIC Tebex (Integrations > API Keys > Public Token), jamais la clé privée.
+    checkoutToken: "15dn7-01b2ac59cd405d348626cfe9a55d86da0f40c4e4",
   },
 
   /* ------------------------------------------------- Packs Oasys Coins
      Affichés sur la page Boutique (image + quantité + prix + bouton).
+     paquet : numéro du pack Tebex -> le bouton Acheter mène directement au paiement.
      lien : (optionnel) lien direct du pack, sinon le lien Tebex ci-dessus.
      offert : (optionnel) coins offerts inclus dans la quantité. */
   coins: [
-    { quantite: "1 000", prix: "12,99 € TTC", image: "assets/img/coins-1000.webp" },
-    { quantite: "2 200", prix: "23,99 € TTC", image: "assets/img/coins-2200.webp", tag: "Populaire", offert: "350" },
-    { quantite: "3 500", prix: "33,99 € TTC", image: "assets/img/coins-3500.webp", tag: "Meilleure offre", offert: "880" },
+    { quantite: "1 000", prix: "12,99 € TTC", image: "assets/img/coins-1000.webp", paquet: 7825440 },
+    { quantite: "2 200", prix: "23,99 € TTC", image: "assets/img/coins-2200.webp", tag: "Populaire", offert: "350", paquet: 7825443 },
+    { quantite: "3 500", prix: "33,99 € TTC", image: "assets/img/coins-3500.webp", tag: "Meilleure offre", offert: "880", paquet: 7829965 },
   ],
 
   /* ------------------------------------------------- Chiffres de l'accueil */
